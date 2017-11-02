@@ -42,7 +42,7 @@ func RegisterDataBase() {
 
 		port := beego.AppConfig.String("db_port")
 
-		dataSource := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=true&loc=%s", username, password, host, port, database, url.QueryEscape(timezone))
+		dataSource := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=true&loc=%s", username, password, host, port, database, url.QueryEscape(timezone))
 
 		orm.RegisterDataBase("default", "mysql", dataSource)
 
