@@ -17,7 +17,8 @@ import (
 	"github.com/lifei6671/mindoc/conf"
 	"github.com/lifei6671/mindoc/converter"
 	"github.com/lifei6671/mindoc/utils"
-	"github.com/russross/blackfriday"
+	"gopkg.in/russross/blackfriday.v2"
+	"github.com/lifei6671/mindoc/utils/ziptil"
 )
 
 type BookResult struct {
@@ -34,6 +35,7 @@ type BookResult struct {
 	CommentCount   int       `json:"comment_count"`
 	CreateTime     time.Time `json:"create_time"`
 	CreateName     string    `json:"create_name"`
+	RealName	   string 	 `json:"real_name"`
 	ModifyTime     time.Time `json:"modify_time"`
 	Cover          string    `json:"cover"`
 	Theme          string    `json:"theme"`
@@ -41,6 +43,7 @@ type BookResult struct {
 	MemberId       int       `json:"member_id"`
 	Editor         string    `json:"editor"`
 	AutoRelease    bool      `json:"auto_release"`
+	HistoryCount   int 		 `json:"history_count"`
 
 	RelationshipId int    `json:"relationship_id"`
 	RoleId         int    `json:"role_id"`
@@ -49,6 +52,7 @@ type BookResult struct {
 
 	LastModifyText   string `json:"last_modify_text"`
 	IsDisplayComment bool   `json:"is_display_comment"`
+	IsDownload bool			`json:"is_download"`
 }
 
 func NewBookResult() *BookResult {
@@ -56,8 +60,8 @@ func NewBookResult() *BookResult {
 }
 
 // 根据项目标识查询项目以及指定用户权限的信息.
-func (m *BookResult) FindByIdentify(identify string, member_id int) (*BookResult, error) {
-	if identify == "" || member_id <= 0 {
+func (m *BookResult) FindByIdentify(identify string, memberId int) (*BookResult, error) {
+	if identify == "" || memberId <= 0 {
 		return m, ErrInvalidParameter
 	}
 	o := orm.NewOrm()
@@ -72,7 +76,7 @@ func (m *BookResult) FindByIdentify(identify string, member_id int) (*BookResult
 
 	relationship := NewRelationship()
 
-	err = o.QueryTable(relationship.TableNameWithPrefix()).Filter("book_id", book.BookId).Filter("member_id", member_id).One(relationship)
+	err = o.QueryTable(relationship.TableNameWithPrefix()).Filter("book_id", book.BookId).Filter("member_id", memberId).One(relationship)
 
 	if err != nil {
 		return m, err
@@ -94,6 +98,9 @@ func (m *BookResult) FindByIdentify(identify string, member_id int) (*BookResult
 	m = NewBookResult().ToBookResult(*book)
 
 	m.CreateName = member.Account
+	if member.RealName != "" {
+		m.RealName = member.RealName
+	}
 	m.MemberId = relationship.MemberId
 	m.RoleId = relationship.RoleId
 	m.RelationshipId = relationship.RelationshipId
@@ -133,7 +140,7 @@ func (m *BookResult) FindToPager(pageIndex, pageSize int) (books []*BookResult, 
 	totalCount = int(count)
 
 	sql := `SELECT
-			book.*,rel.relationship_id,rel.role_id,m.account AS create_name
+			book.*,rel.relationship_id,rel.role_id,m.account AS create_name,m.real_name
 		FROM md_books AS book
 			LEFT JOIN md_relationship AS rel ON rel.book_id = book.book_id AND rel.role_id = 0
 			LEFT JOIN md_members AS m ON rel.member_id = m.member_id
@@ -168,6 +175,8 @@ func (m *BookResult) ToBookResult(book Book) *BookResult {
 	m.Theme = book.Theme
 	m.AutoRelease = book.AutoRelease == 1
 	m.Publisher = book.Publisher
+	m.HistoryCount = book.HistoryCount
+	m.IsDownload = book.IsDownload == 0
 
 	if book.Theme == "" {
 		m.Theme = "default"
@@ -244,7 +253,7 @@ func (m *BookResult) Converter(sessionId string) (ConvertBookResult, error) {
 		Charset:      "utf-8",
 		Cover:        m.Cover,
 		Timestamp:    time.Now().Format("2006-01-02 15:04:05"),
-		Description:  string(blackfriday.MarkdownBasic([]byte(m.Description))),
+		Description:  string(blackfriday.Run([]byte(m.Description))),
 		Footer:       "<p style='color:#8E8E8E;font-size:12px;'>本文档使用 <a href='https://www.iminho.me' style='text-decoration:none;color:#1abc9c;font-weight:bold;'>MinDoc</a> 构建 <span style='float:right'>- _PAGENUM_ -</span></p>",
 		Header:       "<p style='color:#8E8E8E;font-size:12px;'>_SECTION_</p>",
 		Identifier:   "",
@@ -265,6 +274,9 @@ func (m *BookResult) Converter(sessionId string) (ConvertBookResult, error) {
 	}
 	if m.Publisher != "" {
 		ebookConfig.Footer = "<p style='color:#8E8E8E;font-size:12px;'>本文档由 <span style='text-decoration:none;color:#1abc9c;font-weight:bold;'>"+ m.Publisher +"</span> 生成<span style='float:right'>- _PAGENUM_ -</span></p>"
+	}
+	if m.RealName != "" {
+		ebookConfig.Creator = m.RealName
 	}
 
 	if tempOutputPath, err = filepath.Abs(tempOutputPath); err != nil {
@@ -349,3 +361,104 @@ func (m *BookResult) Converter(sessionId string) (ConvertBookResult, error) {
 
 	return convertBookResult, nil
 }
+
+//导出Markdown原始文件
+func (m *BookResult) ExportMarkdown(sessionId string)(string, error){
+	outputPath := filepath.Join(conf.WorkingDirectory,"uploads","books", strconv.Itoa(m.BookId), "book.zip")
+
+	os.MkdirAll(filepath.Dir(outputPath),0644)
+
+	tempOutputPath := filepath.Join(os.TempDir(),sessionId,"markdown")
+
+	defer os.RemoveAll(tempOutputPath)
+
+	err := exportMarkdown(tempOutputPath,0,m.BookId)
+
+	if err != nil {
+		return "",err
+	}
+
+	if err := ziptil.Compress(outputPath,tempOutputPath);err != nil {
+		beego.Error("导出Markdown失败=>",err)
+		return "",err
+	}
+	return outputPath,nil
+}
+
+func exportMarkdown(p string,parentId int,bookId int) (error){
+	o := orm.NewOrm()
+
+	var docs []*Document
+
+	_,err := o.QueryTable(NewDocument().TableNameWithPrefix()).Filter("book_id",bookId).Filter("parent_id",parentId).All(&docs)
+
+	if err != nil {
+		beego.Error("导出Markdown失败=>",err)
+		return err
+	}
+	for _,doc := range docs {
+		//获取当前文档的子文档数量，如果数量不为0，则将当前文档命名为READMD.md并设置成目录。
+		subDocCount,err := o.QueryTable(NewDocument().TableNameWithPrefix()).Filter("parent_id",doc.DocumentId).Count()
+
+		if err != nil {
+			beego.Error("导出Markdown失败=>",err)
+			return err
+		}
+
+		var docPath string
+
+		if subDocCount > 0 {
+			if doc.Identify != "" {
+				docPath = filepath.Join(p, doc.Identify,"README.md")
+			} else {
+				docPath = filepath.Join(p, strconv.Itoa(doc.DocumentId),"README.md")
+			}
+		}else{
+			if doc.Identify != "" {
+				docPath = filepath.Join(p, doc.Identify + ".md")
+			} else {
+				docPath = filepath.Join(p, doc.DocumentName + ".md")
+			}
+		}
+		dirPath := filepath.Dir(docPath);
+
+		os.MkdirAll(dirPath,0766)
+
+		if err := ioutil.WriteFile(docPath,[]byte(doc.Markdown),0644);err != nil {
+			beego.Error("导出Markdown失败=>",err)
+			return err
+		}
+		if subDocCount > 0 {
+			if err = exportMarkdown(dirPath,doc.DocumentId,bookId);err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

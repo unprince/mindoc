@@ -10,7 +10,7 @@
     <!-- Bootstrap -->
     <link href="{{cdncss "/static/bootstrap/css/bootstrap.min.css"}}" rel="stylesheet">
     <link href="{{cdncss "/static/font-awesome/css/font-awesome.min.css"}}" rel="stylesheet">
-    <link href="/static/css/main.css" rel="stylesheet">
+    <link href="{{cdncss "/static/css/main.css"}}" rel="stylesheet">
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
@@ -31,6 +31,7 @@
                     {{/*<li><a href="{{urlfor "ManagerController.Comments" }}" class="item"><i class="fa fa-comments-o" aria-hidden="true"></i> 评论管理</a> </li>*/}}
                     <li><a href="{{urlfor "ManagerController.Setting" }}" class="item"><i class="fa fa-cogs" aria-hidden="true"></i> 配置管理</a> </li>
                     <li><a href="{{urlfor "ManagerController.AttachList" }}" class="item"><i class="fa fa-cloud-upload" aria-hidden="true"></i> 附件管理</a> </li>
+                    <li><a href="{{urlfor "ManagerController.LabelList" }}" class="item"><i class="fa fa-bookmark" aria-hidden="true"></i> 标签管理</a> </li>
                 </ul>
             </div>
             <div class="page-right">
@@ -44,6 +45,10 @@
                         <div class="form-group">
                             <label>用户账号</label>
                             <input type="text" class="form-control" name="account" disabled placeholder="用户账号" value="{{.Model.Account}}">
+                        </div>
+                        <div class="form-group">
+                            <label>真实姓名</label>
+                            <input type="text" name="real_name" class="form-control" value="{{.Model.RealName}}" placeholder="真实姓名">
                         </div>
                         <div class="form-group">
                             <label>用户密码</label>
@@ -86,7 +91,7 @@
 <script src="{{cdnjs "/static/jquery/1.12.4/jquery.min.js"}}" type="text/javascript"></script>
 <script src="{{cdnjs "/static/bootstrap/js/bootstrap.min.js"}}" type="text/javascript"></script>
 <script src="{{cdnjs "/static/js/jquery.form.js"}}" type="text/javascript"></script>
-<script src="/static/js/main.js" type="text/javascript"></script>
+<script src="{{cdnjs "/static/js/main.js"}}" type="text/javascript"></script>
 <script type="text/javascript">
     $(function () {
         $("#saveMemberInfoForm").ajaxForm({

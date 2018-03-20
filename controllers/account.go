@@ -2,19 +2,17 @@ package controllers
 
 import (
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
+	"net/url"
 
-	"net/smtp"
-
+	"github.com/lifei6671/mindoc/mail"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
 	"github.com/lifei6671/gocaptcha"
 	"github.com/lifei6671/mindoc/conf"
 	"github.com/lifei6671/mindoc/models"
 	"github.com/lifei6671/mindoc/utils"
-	"net/url"
 )
 
 // AccountController 用户登录与注册
@@ -27,11 +25,6 @@ func (c *AccountController) Login() {
 	c.Prepare()
 	c.TplName = "account/login.tpl"
 
-	var remember struct {
-		MemberId int
-		Account  string
-		Time     time.Time
-	}
 
 	if member, ok := c.GetSession(conf.LoginSessionName).(models.Member); ok && member.MemberId > 0 {
 		u := c.GetString("url")
@@ -43,13 +36,12 @@ func (c *AccountController) Login() {
 		}
 		c.Redirect(u,302)
 	}
-
+	var remember CookieRemember
 	// 如果 Cookie 中存在登录信息
 	if cookie, ok := c.GetSecureCookie(conf.GetAppKey(), "login"); ok {
 		if err := utils.Decode(cookie, &remember); err == nil {
 			if member, err := models.NewMember().Find(remember.MemberId); err == nil {
 				c.SetMember(*member)
-
 				c.LoggedIn(false)
 				c.StopRun()
 			}
@@ -60,7 +52,7 @@ func (c *AccountController) Login() {
 		account := c.GetString("account")
 		password := c.GetString("password")
 		captcha := c.GetString("code")
-		is_remember := c.GetString("is_remember")
+		isRemember := c.GetString("is_remember")
 
 		// 如果开启了验证码
 		if v, ok := c.Option["ENABLED_CAPTCHA"]; ok && strings.EqualFold(v, "true") {
@@ -76,13 +68,14 @@ func (c *AccountController) Login() {
 			member.Update()
 
 			c.SetMember(*member)
-			if strings.EqualFold(is_remember, "yes") {
+
+			if strings.EqualFold(isRemember, "yes") {
 				remember.MemberId = member.MemberId
 				remember.Account = member.Account
 				remember.Time = time.Now()
 				v, err := utils.Encode(remember)
 				if err == nil {
-					c.SetSecureCookie(conf.GetAppKey(), "login", v)
+					c.SetSecureCookie(conf.GetAppKey(), "login", v,time.Now().Add(time.Hour * 24 * 30).Unix())
 				}
 			}
 			u,_ := url.PathUnescape(c.GetString("url"))
@@ -135,6 +128,10 @@ func (c *AccountController) LoggedIn(isPost bool) interface{} {
 func (c *AccountController) Register() {
 	c.TplName = "account/register.tpl"
 
+	//如果用户登录了，则跳转到网站首页
+	if member, ok := c.GetSession(conf.LoginSessionName).(models.Member); ok && member.MemberId > 0 {
+		c.Redirect(beego.URLFor("HomeController.Index"),302)
+	}
 	// 如果没有开启用户注册
 	if v, ok := c.Option["ENABLED_REGISTER"]; ok && !strings.EqualFold(v, "true") {
 		c.Abort("404")
@@ -248,6 +245,7 @@ func (c *AccountController) FindPassword() {
 		data := map[string]interface{}{
 			"SITE_NAME": c.Option["SITE_NAME"],
 			"url":       c.BaseUrl() + beego.URLFor("AccountController.FindPassword", "token", member_token.Token, "mail", email),
+			"BaseUrl": c.BaseUrl(),
 		}
 
 		body, err := c.ExecuteViewPathTemplate("account/mail_template.tpl", data)
@@ -256,27 +254,52 @@ func (c *AccountController) FindPassword() {
 			c.JsonResult(6003, "邮件发送失败")
 		}
 
-		go func(mail_conf *conf.SmtpConf, email string, body string) {
-			auth := smtp.PlainAuth(
-				"",
-				mail_conf.SmtpUserName,
-				mail_conf.SmtpPassword,
-				mail_conf.SmtpHost,
-			)
+		go func(mailConf *conf.SmtpConf, email string, body string) {
 
-			mime := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
-			subject := "Subject: 找回密码!\n"
-
-			err = smtp.SendMail(
-				mail_conf.SmtpHost+":"+strconv.Itoa(mail_conf.SmtpPort),
-				auth,
-				mail_conf.FormUserName,
-				[]string{email},
-				[]byte(subject+mime+"\n"+body),
-			)
-			if err != nil {
-				beego.Error("邮件发送失败 => ", email, err)
+			mailConfig := &mail.SMTPConfig{
+				Username: mailConf.SmtpUserName,
+				Password: mailConf.SmtpPassword,
+				Host:     mailConf.SmtpHost,
+				Port:     mailConf.SmtpPort,
+				Secure:   mailConf.Secure,
+				Identity:"",
 			}
+			beego.Info(mailConfig)
+
+			c := mail.NewSMTPClient(mailConfig)
+			m := mail.NewMail()
+
+			m.AddFrom(mailConf.FormUserName)
+			m.AddFromName(mailConf.FormUserName)
+			m.AddSubject("找回密码")
+			m.AddHTML(body)
+			m.AddTo(email)
+
+			if e := c.Send(m); e != nil {
+				beego.Error("发送邮件失败：" + e.Error())
+			} else {
+				beego.Info("邮件发送成功：" + email)
+			}
+			//auth := smtp.PlainAuth(
+			//	"",
+			//	mail_conf.SmtpUserName,
+			//	mail_conf.SmtpPassword,
+			//	mail_conf.SmtpHost,
+			//)
+			//
+			//mime := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
+			//subject := "Subject: 找回密码!\n"
+			//
+			//err = smtp.SendMail(
+			//	mail_conf.SmtpHost+":"+strconv.Itoa(mail_conf.SmtpPort),
+			//	auth,
+			//	mail_conf.FormUserName,
+			//	[]string{email},
+			//	[]byte(subject+mime+"\n"+body),
+			//)
+			//if err != nil {
+			//	beego.Error("邮件发送失败 => ", email, err)
+			//}
 		}(mail_conf, email, body)
 
 		c.JsonResult(0, "ok", c.BaseUrl()+beego.URLFor("AccountController.Login"))

@@ -64,6 +64,7 @@
                     <button type="button" class="btn btn-success" data-toggle="modal" data-target="#shareProject"><i class="fa fa-share-alt" aria-hidden="true"></i> 分享</button>
                 {{end}}
                 </div>
+                {{if .Model.IsDownload}}
                 <div class="dropdown pull-right" style="margin-right: 10px;">
                     <button type="button" class="btn btn-primary" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <i class="fa fa-cloud-download" aria-hidden="true"></i> 下载 <span class="caret"></span>
@@ -73,9 +74,12 @@
                         <li><a href="{{urlfor "DocumentController.Export" ":key" .Model.Identify "output" "epub"}}" target="_blank">EPUB</a> </li>
                         <li><a href="{{urlfor "DocumentController.Export" ":key" .Model.Identify "output" "mobi"}}" target="_blank">MOBI</a> </li>
                         <li><a href="{{urlfor "DocumentController.Export" ":key" .Model.Identify "output" "docx"}}" target="_blank">Word</a> </li>
+                        {{if eq .Model.Editor "markdown"}}
+                        <li><a href="{{urlfor "DocumentController.Export" ":key" .Model.Identify "output" "markdown"}}" target="_blank">Markdown</a> </li>
+                        {{end}}
                     </ul>
                 </div>
-
+                {{end}}
             </div>
         </div>
     </header>
@@ -276,7 +280,6 @@
 <script src="{{cdnjs "/static/js/jquery.highlight.js"}}" type="text/javascript"></script>
 <script src="{{cdnjs "/static/js/kancloud.js"}}" type="text/javascript"></script>
 <script src="{{cdnjs "/static/js/splitbar.js"}}" type="text/javascript"></script>
-<script src="{{cdnjs "/static/katex/katex.min.js"}}" type="text/javascript"></script>
 <script type="text/javascript">
 
 $(function () {

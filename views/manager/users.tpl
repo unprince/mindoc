@@ -18,6 +18,9 @@
     <script src="/static/html5shiv/3.7.3/html5shiv.min.js"></script>
     <script src="/static/respond.js/1.4.2/respond.min.js"></script>
     <![endif]-->
+    <style type="text/css">
+        .table>tbody>tr>td{vertical-align: middle;}
+    </style>
 </head>
 <body>
 <div class="manual-reader">
@@ -32,6 +35,8 @@
                     {{/*<li><a href="{{urlfor "ManagerController.Comments" }}" class="item"><i class="fa fa-comments-o" aria-hidden="true"></i> 评论管理</a> </li>*/}}
                     <li><a href="{{urlfor "ManagerController.Setting" }}" class="item"><i class="fa fa-cogs" aria-hidden="true"></i> 配置管理</a> </li>
                     <li><a href="{{urlfor "ManagerController.AttachList" }}" class="item"><i class="fa fa-cloud-upload" aria-hidden="true"></i> 附件管理</a> </li>
+                    <li><a href="{{urlfor "ManagerController.LabelList" }}" class="item"><i class="fa fa-bookmark" aria-hidden="true"></i> 标签管理</a> </li>
+
                 </ul>
 
             </div>
@@ -56,6 +61,7 @@
                                     <th width="80">ID</th>
                                     <th width="80">头像</th>
                                     <th>账号</th>
+                                    <th>姓名</th>
                                     <th>角色</th>
                                     <th>类型</th>
                                     <th>状态</th>
@@ -67,6 +73,7 @@
                                     <td>${item.member_id}</td>
                                     <td><img :src="item.avatar" onerror="this.src='/static/images/middle.gif'" class="img-circle" width="34" height="34"></td>
                                     <td>${item.account}</td>
+                                    <td>${item.real_name}</td>
                                     <td>
                                         <template v-if="item.role == 0">
                                             超级管理员
@@ -164,6 +171,12 @@
                         </div>
                     </div>
                     <div class="form-group">
+                        <label class="col-sm-2 control-label">真实姓名</label>
+                        <div class="col-sm-10">
+                            <input type="text" name="real_name" class="form-control" value="" placeholder="真实姓名">
+                        </div>
+                    </div>
+                    <div class="form-group">
                         <label class="col-sm-2 control-label">手机号</label>
                         <div class="col-sm-10">
                             <input type="text" class="form-control" placeholder="手机号" name="phone" maxlength="50">
@@ -192,11 +205,11 @@
         </form>
     </div>
 </div><!--END Modal-->
-<script src="/static/jquery/1.12.4/jquery.min.js"></script>
-<script src="/static/bootstrap/js/bootstrap.min.js"></script>
-<script src="/static/vuejs/vue.min.js"></script>
-<script src="/static/js/jquery.form.js" type="text/javascript"></script>
-<script src="/static/js/main.js" type="text/javascript"></script>
+<script src="{{cdncss "/static/jquery/1.12.4/jquery.min.js"}}"></script>
+<script src="{{cdncss "/static/bootstrap/js/bootstrap.min.js"}}"></script>
+<script src="{{cdncss "/static/vuejs/vue.min.js"}}"></script>
+<script src="{{cdncss "/static/js/jquery.form.js"}}" type="text/javascript"></script>
+<script src="{{cdncss "/static/js/main.js"}}" type="text/javascript"></script>
 <script type="text/javascript">
     $(function () {
         $("#addMemberDialogModal").on("show.bs.modal",function () {

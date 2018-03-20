@@ -59,7 +59,7 @@
                     <div class="dashboard">
                         <div class="pull-left" style="width: 200px;margin-bottom: 15px;">
                             <div class="book-image">
-                                <img src="{{.Model.Cover}}" onerror="this.src='/static/images/book.jpg'" width="174" height="229" style="border: 1px solid #666">
+                                <img src="{{.Model.Cover}}" onerror="this.src='/static/images/book.jpg'" style="border: 1px solid #666">
                             </div>
                         </div>
 
@@ -92,7 +92,7 @@
                         <span class="title">文档标签：</span>
                         <span class="body">{{.Model.Label}}</span>
                     </div>
-                        <div class="summary">{{.Model.Description}} </div>
+                        <div class="summary">{{.Description}} </div>
 
                     </div>
                 </div>
@@ -104,7 +104,7 @@
 <script src="{{cdnjs "/static/jquery/1.12.4/jquery.min.js"}}"></script>
 <script src="{{cdnjs "/static/bootstrap/js/bootstrap.min.js"}}"></script>
 <script src="{{cdnjs "/static/layer/layer.js"}}"></script>
-<script src="/static/js/main.js" type="text/javascript"></script>
+<script src="{{cdnjs "/static/js/main.js"}}" type="text/javascript"></script>
 <script type="text/javascript">
     $(function () {
         $("#btnRelease").on("click",function () {

@@ -21,6 +21,7 @@ import (
 type Member struct {
 	MemberId int    `orm:"pk;auto;unique;column(member_id)" json:"member_id"`
 	Account  string `orm:"size(100);unique;column(account)" json:"account"`
+	RealName string  `orm:"size(255);column(real_name)" json:"real_name"`
 	Password string `orm:"size(1000);column(password)" json:"-"`
 	//认证方式: local 本地数据库 /ldap LDAP
 	AuthMethod  string `orm:"column(auth_method);default(local);size(50);" json:"auth_method"`
@@ -228,6 +229,20 @@ func (m *Member) FindByAccount(account string) (*Member, error) {
 		m.ResolveRoleName()
 	}
 	return m, err
+}
+//批量查询用户
+func (m *Member) FindByAccountList(accounts ...string) ([]*Member,error) {
+	o := orm.NewOrm()
+
+	var members []*Member
+	_,err := o.QueryTable(m.TableNameWithPrefix()).Filter("account__in", accounts).All(&members)
+
+	if err == nil {
+		for _,item := range members {
+			item.ResolveRoleName()
+		}
+	}
+	return members, err
 }
 
 //分页查找用户.

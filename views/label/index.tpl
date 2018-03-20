@@ -11,7 +11,7 @@
     <link href="{{cdncss "/static/bootstrap/css/bootstrap.min.css"}}" rel="stylesheet">
     <link href="{{cdncss "/static/font-awesome/css/font-awesome.min.css"}}" rel="stylesheet">
 
-    <link href="/static/css/main.css" rel="stylesheet">
+    <link href="{{cdncss "/static/css/main.css"}}" rel="stylesheet">
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
@@ -33,7 +33,7 @@
                     <dl class="manual-item-standard">
                         <dt>
                             <a href="{{urlfor "DocumentController.Index" ":key" $item.Identify}}" title="{{$item.BookName}}-{{$item.CreateName}}" target="_blank">
-                                <img src="{{$item.Cover}}" class="cover" alt="{{$item.BookName}}-{{$item.CreateName}}">
+                                <img src="{{cdnimg $item.Cover}}" class="cover" alt="{{$item.BookName}}-{{$item.CreateName}}">
                             </a>
                         </dt>
                         <dd>
@@ -43,7 +43,7 @@
                             <span class="author">
                                 <b class="text">作者</b>
                                 <b class="text">-</b>
-                                <b class="text">{{$item.CreateName}}</b>
+                                <b class="text">{{if eq $item.RealName "" }}{{$item.CreateName}}{{else}}{{$item.RealName}}{{end}}</b>
                             </span>
                         </dd>
                     </dl>

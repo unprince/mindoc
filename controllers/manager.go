@@ -15,6 +15,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"github.com/lifei6671/mindoc/utils/pagination"
+	"math"
+	"gopkg.in/russross/blackfriday.v2"
 )
 
 type ManagerController struct {
@@ -108,6 +110,7 @@ func (c *ManagerController) CreateMember() {
 	member.Avatar = conf.GetDefaultAvatar()
 	member.CreateAt = c.Member.MemberId
 	member.Email = email
+	member.RealName = strings.TrimSpace(c.GetString("real_name",""))
 	if phone != "" {
 		member.Phone = phone
 	}
@@ -211,6 +214,7 @@ func (c *ManagerController) EditMember() {
 		member.Email = email
 		member.Phone = phone
 		member.Description = description
+		member.RealName = c.GetString("real_name")
 		if password1 != "" && password2 != password1 {
 			c.JsonResult(6001, "确认密码不正确")
 		}
@@ -294,7 +298,9 @@ func (c *ManagerController) Books() {
 	} else {
 		c.Data["PageHtml"] = ""
 	}
-
+	for i,book := range books {
+		books[i].Description = utils.StripTags(string(blackfriday.Run([]byte(book.Description))))
+	}
 	c.Data["Lists"] = books
 }
 
@@ -355,14 +361,14 @@ func (c *ManagerController) EditBook() {
 func (c *ManagerController) DeleteBook() {
 	c.Prepare()
 
-	book_id, _ := c.GetInt("book_id", 0)
+	bookId, _ := c.GetInt("book_id", 0)
 
-	if book_id <= 0 {
+	if bookId <= 0 {
 		c.JsonResult(6001, "参数错误")
 	}
 	book := models.NewBook()
 
-	err := book.ThoroughDeleteBook(book_id)
+	err := book.ThoroughDeleteBook(bookId)
 
 	if err == orm.ErrNoRows {
 		c.JsonResult(6002, "项目不存在")
@@ -631,3 +637,66 @@ func (c *ManagerController) AttachDelete() {
 	}
 	c.JsonResult(0, "ok")
 }
+
+//标签列表
+func (c *ManagerController) LabelList(){
+	c.Prepare()
+	c.TplName = "manager/label_list.tpl"
+
+	pageIndex, _ := c.GetInt("page", 1)
+
+	labels, totalCount, err := models.NewLabel().FindToPager(pageIndex, conf.PageSize)
+
+	if err != nil {
+		c.ShowErrorPage(50001, err.Error())
+	}
+	if totalCount > 0 {
+		pager := pagination.NewPagination(c.Ctx.Request,totalCount,conf.PageSize)
+		c.Data["PageHtml"] = pager.HtmlPages()
+	} else {
+		c.Data["PageHtml"] = ""
+	}
+	c.Data["TotalPages"] = int(math.Ceil(float64(totalCount) / float64(conf.PageSize)))
+
+	c.Data["Lists"] = labels
+}
+//删除标签
+func (c *ManagerController) LabelDelete(){
+	labelId,err := strconv.Atoi(c.Ctx.Input.Param(":id"))
+
+	if err != nil {
+		beego.Error("获取删除标签参数时出错:",err)
+		c.JsonResult(50001,"参数错误")
+	}
+	if labelId <= 0 {
+		c.JsonResult(50001,"参数错误")
+	}
+
+	label,err := models.NewLabel().FindFirst("label_id",labelId)
+	if err != nil {
+		beego.Error("查询标签时出错:",err)
+		c.JsonResult(50001,"查询标签时出错:" + err.Error())
+	}
+	if err := label.Delete();err != nil {
+		c.JsonResult(50002,"删除失败:" + err.Error())
+	}else{
+		c.JsonResult(0,"ok")
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

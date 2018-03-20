@@ -33,6 +33,8 @@ func init() {
 	beego.Router("/manager/attach/list", &controllers.ManagerController{}, "*:AttachList")
 	beego.Router("/manager/attach/detailed/:id", &controllers.ManagerController{}, "*:AttachDetailed")
 	beego.Router("/manager/attach/delete", &controllers.ManagerController{}, "post:AttachDelete")
+	beego.Router("/manager/label/list", &controllers.ManagerController{},"get:LabelList")
+	beego.Router("/manager/label/delete/:id", &controllers.ManagerController{},"post:LabelDelete")
 
 	beego.Router("/setting", &controllers.SettingController{}, "*:Index")
 	beego.Router("/setting/password", &controllers.SettingController{}, "*:Password")
@@ -65,6 +67,7 @@ func init() {
 	beego.Router("/api/:key/delete", &controllers.DocumentController{}, "post:Delete")
 	beego.Router("/api/:key/content/?:id", &controllers.DocumentController{}, "*:Content")
 	beego.Router("/api/:key/compare/:id", &controllers.DocumentController{}, "*:Compare")
+	beego.Router("/api/search/user/:key", &controllers.SearchController{}, "*:User")
 
 	beego.Router("/history/get", &controllers.DocumentController{}, "get:History")
 	beego.Router("/history/delete", &controllers.DocumentController{}, "*:DeleteHistory")

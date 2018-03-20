@@ -1,4 +1,8 @@
 $(function () {
+    editormd.katexURL = {
+        js  : "/static/katex/katex",
+        css : "/static/katex/katex"
+    };
     window.addDocumentModalFormHtml = $(this).find("form").html();
     window.editor = editormd("docEditor", {
         width: "100%",
@@ -19,6 +23,7 @@ $(function () {
         sequenceDiagram: true,
         tocStartLevel: 1,
         tocm: true,
+        tex:true,
         saveHTMLToTextarea: true,
 
         onload: function() {
@@ -197,6 +202,7 @@ $(function () {
             url: window.editURL,
             data: { "identify": window.book.identify, "doc_id": doc_id, "markdown": content, "html": html, "cover": $is_cover ? "yes" : "no", "version": version },
             type: "post",
+            timeout : 30000,
             dataType: "json",
             success: function (res) {
                 layer.close(index);
@@ -223,6 +229,10 @@ $(function () {
                 } else {
                     layer.msg(res.message);
                 }
+            },
+            error : function (XMLHttpRequest, textStatus, errorThrown) {
+                layer.close(index);
+                layer.msg("服务器错误：" +  errorThrown);
             }
         });
     }
