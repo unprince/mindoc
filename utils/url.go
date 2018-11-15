@@ -1,6 +1,8 @@
 package utils
 
-import "strings"
+import (
+	"strings"
+)
 
 func JoinURI(elem ...string) string {
 	if len(elem) <= 0 {

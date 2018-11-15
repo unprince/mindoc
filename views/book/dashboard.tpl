@@ -11,7 +11,7 @@
     <link href="{{cdncss "/static/bootstrap/css/bootstrap.min.css"}}" rel="stylesheet">
     <link href="{{cdncss "/static/font-awesome/css/font-awesome.min.css"}}" rel="stylesheet">
 
-    <link href="{{cdncss "/static/css/main.css"}}" rel="stylesheet">
+    <link href="{{cdncss "/static/css/main.css" "version"}}" rel="stylesheet">
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
@@ -59,7 +59,7 @@
                     <div class="dashboard">
                         <div class="pull-left" style="width: 200px;margin-bottom: 15px;">
                             <div class="book-image">
-                                <img src="{{.Model.Cover}}" onerror="this.src='/static/images/book.jpg'" style="border: 1px solid #666">
+                                <img src="{{cdnimg .Model.Cover}}" onerror="this.src='{{cdnimg "/static/images/book.jpg"}}'" style="border: 1px solid #666;width: 175px;">
                             </div>
                         </div>
 
@@ -73,11 +73,11 @@
                             </div>
                             <div class="list">
                                 <span class="title">创建时间：</span>
-                                <span class="body"> {{date .Model.CreateTime "Y-m-d H:i:s"}} </span>
+                                <span class="body"> {{date_format .Model.CreateTime "2006-01-02 15:04:05"}} </span>
                             </div>
                             <div class="list">
                                 <span class="title">修改时间：</span>
-                                <span class="body"> {{date .Model.ModifyTime "Y-m-d H:i:s"}} </span>
+                                <span class="body"> {{date_format .Model.CreateTime "2006-01-02 15:04:05"}} </span>
                             </div>
                         <div class="list">
                             <span class="title">担任角色：</span>

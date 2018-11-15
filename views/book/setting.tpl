@@ -14,7 +14,7 @@
     <link href="{{cdncss "/static/cropper/2.3.4/cropper.min.css"}}" rel="stylesheet">
     <link href="{{cdncss "/static/bootstrap/plugins/tagsinput/bootstrap-tagsinput.css"}}" rel="stylesheet">
     <link href="{{cdncss "/static/bootstrap/plugins/bootstrap-switch/css/bootstrap3//bootstrap-switch.min.css"}}" rel="stylesheet">
-    <link href="{{cdncss "/static/css/main.css"}}" rel="stylesheet">
+    <link href="{{cdncss "/static/css/main.css" "version"}}" rel="stylesheet">
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
@@ -61,7 +61,7 @@
                             </div>
                             <div class="form-group">
                                 <label>标识</label>
-                                <input type="text" class="form-control" value="{{.BaseUrl}}{{urlfor "DocumentController.Index" ":key" .Model.Identify}}" placeholder="项目唯一标识" disabled>
+                                <input type="text" class="form-control" value="{{urlfor "DocumentController.Index" ":key" .Model.Identify}}" placeholder="项目唯一标识" disabled>
                             </div>
                             <div class="form-group">
                                 <label>历史记录数量</label>
@@ -129,6 +129,7 @@
                     </div>
                 </div>
                 {{end}}
+
                 <div class="form-group">
                     <label for="autoRelease">自动发布</label>
                     <div class="controls">
@@ -141,7 +142,31 @@
                     <label for="autoRelease">开启导出</label>
                     <div class="controls">
                         <div class="switch switch-small" data-on="primary" data-off="info">
-                            <input type="checkbox" id="isDownload" name="is_download"{{if .Model.IsDownload }} checked{{end}} data-size="small">
+                            <input type="checkbox" id="isDownload" name="is_download"{{if .Model.IsDownload }} checked{{end}} data-size="small" placeholder="开启导出">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="autoRelease">开启分享</label>
+                    <div class="controls">
+                        <div class="switch switch-small" data-on="primary" data-off="info">
+                            <input type="checkbox" id="enableShare" name="enable_share"{{if .Model.IsEnableShare }} checked{{end}} data-size="small" placeholder="开启分享">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="autoRelease">设置第一篇文档为默认首页</label>
+                    <div class="controls">
+                        <div class="switch switch-small" data-on="primary" data-off="info">
+                            <input type="checkbox" id="isUseFirstDocument" name="is_use_first_document"{{if .Model.IsUseFirstDocument }} checked{{end}} data-size="small" placeholder="设置第一篇文档为默认首页">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="autoRelease">自动保存</label>
+                    <div class="controls">
+                        <div class="switch switch-small" data-on="primary" data-off="info">
+                            <input type="checkbox" id="autoSave" name="auto_save"{{if .Model.AutoSave }} checked{{end}} data-size="small" placeholder="自动保存">
                         </div>
                     </div>
                 </div>
@@ -154,7 +179,7 @@
             <div class="form-right">
                 <label>
                     <a href="javascript:;" data-toggle="modal" data-target="#upload-logo-panel">
-                        <img src="{{.Model.Cover}}" onerror="this.src='/static/images/book.png'" alt="封面" style="max-width: 120px;border: 1px solid #999" id="headimgurl">
+                        <img src="{{cdnimg .Model.Cover}}" onerror="this.src='{{cdnimg "/static/images/book.png"}}'" alt="封面" style="max-width: 120px;border: 1px solid #999" id="headimgurl">
                     </a>
                 </label>
             </div>
@@ -308,8 +333,7 @@
         }).on("show.bs.modal",function () {
             window.modalHtml = $("#upload-logo-panel").find(".modal-body").html();
         });
-        $("#autoRelease").bootstrapSwitch();
-        $("#isDownload").bootstrapSwitch();
+        $("#autoRelease,#enableShare,#isDownload,#isUseFirstDocument,#autoSave").bootstrapSwitch();
 
         $('input[name="label"]').tagsinput({
             confirmKeys: [13,44],
@@ -424,7 +448,7 @@
         try {
             var uploader = WebUploader.create({
                 auto: false,
-                swf: '/static/webuploader/Uploader.swf',
+                swf: '{{.BaseUrl}}/static/webuploader/Uploader.swf',
                 server: '{{urlfor "BookController.UploadCover"}}',
                 formData : { "identify" : {{.Model.Identify}} },
                 pick: "#filePicker",

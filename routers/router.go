@@ -25,16 +25,20 @@ func init() {
 	beego.Router("/manager/books", &controllers.ManagerController{}, "*:Books")
 	beego.Router("/manager/books/edit/:key", &controllers.ManagerController{}, "*:EditBook")
 	beego.Router("/manager/books/delete", &controllers.ManagerController{}, "*:DeleteBook")
+
 	beego.Router("/manager/comments", &controllers.ManagerController{}, "*:Comments")
-	beego.Router("/manager/books/token", &controllers.ManagerController{}, "post:CreateToken")
 	beego.Router("/manager/setting", &controllers.ManagerController{}, "*:Setting")
+	beego.Router("/manager/books/token", &controllers.ManagerController{}, "post:CreateToken")
 	beego.Router("/manager/books/transfer", &controllers.ManagerController{}, "post:Transfer")
 	beego.Router("/manager/books/open", &controllers.ManagerController{}, "post:PrivatelyOwned")
+
 	beego.Router("/manager/attach/list", &controllers.ManagerController{}, "*:AttachList")
 	beego.Router("/manager/attach/detailed/:id", &controllers.ManagerController{}, "*:AttachDetailed")
 	beego.Router("/manager/attach/delete", &controllers.ManagerController{}, "post:AttachDelete")
 	beego.Router("/manager/label/list", &controllers.ManagerController{},"get:LabelList")
 	beego.Router("/manager/label/delete/:id", &controllers.ManagerController{},"post:LabelDelete")
+
+	beego.Router("/manager/config",  &controllers.ManagerController{}, "*:Config")
 
 	beego.Router("/setting", &controllers.SettingController{}, "*:Index")
 	beego.Router("/setting/password", &controllers.SettingController{}, "*:Password")
@@ -52,6 +56,7 @@ func init() {
 	beego.Router("/book/users/change", &controllers.BookMemberController{}, "post:ChangeRole")
 	beego.Router("/book/users/delete", &controllers.BookMemberController{}, "post:RemoveMember")
 	beego.Router("/book/users/import", &controllers.BookController{},"post:Import")
+	beego.Router("/book/users/copy", &controllers.BookController{},"post:Copy")
 
 	beego.Router("/book/setting/save", &controllers.BookController{}, "post:SaveBook")
 	beego.Router("/book/setting/open", &controllers.BookController{}, "post:PrivatelyOwned")
@@ -59,6 +64,26 @@ func init() {
 	beego.Router("/book/setting/upload", &controllers.BookController{}, "post:UploadCover")
 	beego.Router("/book/setting/token", &controllers.BookController{}, "post:CreateToken")
 	beego.Router("/book/setting/delete", &controllers.BookController{}, "post:Delete")
+
+	//管理文章的路由
+	beego.Router("/manage/blogs", &controllers.BlogController{},"*:ManageList")
+	beego.Router("/manage/blogs/setting/?:id", &controllers.BlogController{}, "*:ManageSetting")
+	beego.Router("/manage/blogs/edit/?:id",&controllers.BlogController{}, "*:ManageEdit")
+	beego.Router("/manage/blogs/delete",&controllers.BlogController{}, "post:ManageDelete")
+	beego.Router("/manage/blogs/upload",&controllers.BlogController{}, "post:Upload")
+	beego.Router("/manage/blogs/attach/:id",&controllers.BlogController{}, "post:RemoveAttachment")
+
+
+	//读文章的路由
+	beego.Router("/blogs", &controllers.BlogController{}, "*:List")
+	beego.Router("/blog-attach/:id:int/:attach_id:int", &controllers.BlogController{},"get:Download")
+	beego.Router("/blog-:id([0-9]+).html",&controllers.BlogController{}, "*:Index")
+
+	//模板相关接口
+	beego.Router("/api/template/get", &controllers.TemplateController{},"get:Get")
+	beego.Router("/api/template/list", &controllers.TemplateController{},"post:List")
+	beego.Router("/api/template/add", &controllers.TemplateController{},"post:Add")
+	beego.Router("/api/template/remove", &controllers.TemplateController{},"post:Delete")
 
 	beego.Router("/api/attach/remove/", &controllers.DocumentController{}, "post:RemoveAttachment")
 	beego.Router("/api/:key/edit/?:id", &controllers.DocumentController{}, "*:Edit")
