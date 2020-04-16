@@ -6,13 +6,14 @@ import (
 	"strings"
 	"time"
 
+	"html/template"
+
 	"github.com/astaxie/beego"
 	"github.com/lifei6671/gocaptcha"
 	"github.com/lifei6671/mindoc/conf"
 	"github.com/lifei6671/mindoc/mail"
 	"github.com/lifei6671/mindoc/models"
 	"github.com/lifei6671/mindoc/utils"
-	"html/template"
 )
 
 // AccountController 用户登录与注册
@@ -117,7 +118,7 @@ func (c *AccountController) Login() {
 				remember.Time = time.Now()
 				v, err := utils.Encode(remember)
 				if err == nil {
-					c.SetSecureCookie(conf.GetAppKey(), "login", v, time.Now().Add(time.Hour * 24 * 30).Unix())
+					c.SetSecureCookie(conf.GetAppKey(), "login", v, time.Now().Add(time.Hour*24*30).Unix())
 				}
 			}
 
@@ -437,12 +438,12 @@ func (c *AccountController) Logout() {
 func (c *AccountController) Captcha() {
 	c.Prepare()
 
-	captchaImage, err := gocaptcha.NewCaptchaImage(140, 40, gocaptcha.RandLightColor())
+	captchaImage := gocaptcha.NewCaptchaImage(140, 40, gocaptcha.RandLightColor())
 
-	if err != nil {
-		beego.Error(err)
-		c.Abort("500")
-	}
+	// if err != nil {
+	// 	beego.Error(err)
+	// 	c.Abort("500")
+	// }
 
 	captchaImage.DrawNoise(gocaptcha.CaptchaComplexLower)
 
